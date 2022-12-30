@@ -27,14 +27,6 @@ $('#imgInp').on('keyup keypress', function (e) {
     }
 });
 
-// $('#blah').hover(
-//     function() {
-//         $(this).animate({ 'zoom': 1.2 }, 400);
-//     },
-//     function() {
-//         $(this).animate({ 'zoom': 1 }, 400);
-//     });
-
 var formData = new FormData();
 
 function readURL(input) {
