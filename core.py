@@ -10,9 +10,9 @@ Original file is located at
 import cv2
 import base64
 import time
+import numpy as np
 
 from dataclasses import dataclass, astuple
-from numpy import np
 
 
 Mat = np.ndarray[int, np.dtype[np.generic]]
