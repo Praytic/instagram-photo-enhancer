@@ -8,9 +8,14 @@ Original file is located at
 """
 
 import cv2
-import os
+import base64
+import time
 
 from dataclasses import dataclass, astuple
+from numpy import np
+
+
+Mat = np.ndarray[int, np.dtype[np.generic]]
 
 @dataclass
 class Vec2:
@@ -19,56 +24,67 @@ class Vec2:
 
     @staticmethod
     def zero(self):
-      return Vec2(0, 0)
+        return Vec2(0, 0)
 
     def __post_init__(self):
         self.x = int(self.x)
         self.y = int(self.y)
 
-story_resolution = Vec2(1080, 1920)
-image_folder = 'sample_images'
-video_name = 'output_video_dir/video.mp4'
 
-images = [img for img in os.listdir(image_folder) if img.endswith(".JPG")]
-frame = cv2.imread(os.path.join(image_folder, images[0]))
+class VideoProcessor:
 
-height, width = frame.shape[:2]
+    story_resolution = Vec2(1080, 1920)
+    video_name = 'output_video_dir/video-%s.mp4'
 
-start_size, end_size = Vec2(1080, 1920), Vec2(height / 1920 * 1080, height)
-start_vec = Vec2(width / 2 - start_size.x / 2, height / 2 - start_size.y / 2)
-end_vec = Vec2(width / 2 - end_size.x / 2, height / 2 - end_size.y / 2)
-fps = 30
-video_length = 15
+    def __init__(self, img, rect_start, rect_end, fps=30, video_length=10):
+        self.img = img
+        self.rect_start = rect_start
+        self.rect_end = rect_end
+        self.fps = fps
+        self.video_length = video_length
+        self.transition_speed = video_length * fps
 
-print(f"End size: {end_size}")
+    def readb64(self, uri):
+        encoded_data = uri.split(',')[1]
+        nparr = np.fromstring(base64.b64decode(encoded_data), np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        return img
 
-transition_speed = video_length * fps
 
-def mov_vec2(start_vec: Vec2, end_vec: Vec2,transition_step: int):
-  return Vec2(start_vec.x + transition_step * (end_vec.x - start_vec.x) / transition_speed, 
-              start_vec.y + transition_step * (end_vec.y - start_vec.y) / transition_speed)
+    def mov_vec2(self, start_vec: Vec2, end_vec: Vec2, transition_step: int) -> Vec2:
+        return Vec2(start_vec.x + transition_step * (end_vec.x - start_vec.x) / self.transition_speed,
+                    start_vec.y + transition_step * (end_vec.y - start_vec.y) / self.transition_speed)
 
-def crop(point: Vec2, crop_size: Vec2, img):
-  return img[point.y:point.y + crop_size.y, point.x:point.x + crop_size.x]
 
-cropped_images = []
-for idx, img in enumerate([frame] * transition_speed):
-    crop_size = mov_vec2(start_size, end_size, idx)
-    crop_point = mov_vec2(start_vec, end_vec, idx)
-    cropped_img = crop(crop_point, crop_size, img)
-    cropped_img = cv2.resize(cropped_img, astuple(end_size), interpolation=cv2.INTER_CUBIC)
-    cropped_images.append(cropped_img)
+    def crop(self, point: Vec2, crop_size: Vec2, img) -> Mat:
+        return img[point.y:point.y + crop_size.y, point.x:point.x + crop_size.x]
 
-fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-video = cv2.VideoWriter(video_name, fourcc, fps, astuple(end_size))
 
-for image in cropped_images:
-    assert image.shape[:2] == astuple(end_size)[::-1]
-    video.write(image)
+    def produce_video(self) -> str:
+        frame = self.readb64(self.img)
+        height, width = frame.shape[:2]
+        video_name = self.video_name % time.time()
 
-cv2.destroyAllWindows()
-video.release()
+        start_size, end_size = self.rect_start.get_size(), self.rect_end.get_size()
+        start_vec, end_vec = self.rect_start.get_pos(), self.rect_end.get_pos()
+        
+        cropped_images = []
+        for idx, img in enumerate([frame] * self.transition_speed):
+            crop_size = self.mov_vec2(start_size, end_size, idx)
+            crop_point = self.mov_vec2(start_vec, end_vec, idx)
+            cropped_img = self.crop(crop_point, crop_size, img)
+            cropped_img = cv2.resize(cropped_img, astuple(
+                end_size), interpolation=cv2.INTER_CUBIC)
+            cropped_images.append(cropped_img)
 
-image.shape[:2][::-1]
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        video = cv2.VideoWriter(video_name, fourcc, self.fps, astuple(end_size))
 
-astuple(end_size)
+        for image in cropped_images:
+            assert image.shape[:2] == astuple(end_size)[::-1]
+            video.write(image)
+
+        cv2.destroyAllWindows()
+        video.release()
+
+        return video_name
