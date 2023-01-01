@@ -1,0 +1,28 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: akhileshns/heroku-deploy@v3.12.12 # This is the action
+        with:
+          heroku_api_key: ${{secrets.HEROKU_API_KEY}}
+          heroku_app_name: "pray-photo-enhancer" #Must be unique in Heroku
+          heroku_email: "praytic@yandex.ru"
+          usedocker: true
+          docker_build_args: |
+            PORT
+            CLIENT_SECRET
+            CLIENT_ID
+            REDIRECT_URI
+        env:
+          PORT: 5000
+          REDIRECT_URI: https://pray-photo-enhancer.herokuapp.com/callback
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
