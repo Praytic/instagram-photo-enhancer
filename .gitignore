@@ -161,7 +161,6 @@ celerybeat.pid
 .env
 .venv
 env/
-!env/Procfile
 venv/
 ENV/
 env.bak/
@@ -236,5 +235,6 @@ pip-selfcheck.json
 
 ### Custom ###
 output_video_dir
+!env/Procfile
 
 # End of https://www.toptal.com/developers/gitignore/api/python,venv,visualstudiocode
