@@ -161,6 +161,7 @@ celerybeat.pid
 .env
 .venv
 env/
+!env/Procfile
 venv/
 ENV/
 env.bak/
