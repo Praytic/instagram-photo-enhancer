@@ -81,7 +81,7 @@ def profile():
     """Fetching a protected resource using an OAuth 2 token.
     """
     current_app.logger.debug("Returning user profile")
-    instagram = OAuth2Session(current_app.config['CLIENT_ID'], token=token)
+    instagram = OAuth2Session(current_app.config['CLIENT_ID'], token=session['oauth_token'])
     return jsonify(instagram.get(current_app.config['USER_URL']).json())
 
 
