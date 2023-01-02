@@ -38,7 +38,7 @@ def login():
 
 # Step 2: User authorization, this happens on the provider.
 
-@routes_blueprint.route("/callback/", methods=["GET"])
+@routes_blueprint.route("/callback", methods=["GET"])
 def callback():
     """ Step 3: Retrieving an access token.
 
@@ -50,7 +50,9 @@ def callback():
     current_app.logger.debug("Callback func. Request body: %s", request.json)
     instagram = OAuth2Session(
         current_app.config['CLIENT_ID'], state=session['oauth_state'])
-    
+    log = logging.getLogger('requests_oauthlib')
+    log.addHandler(logging.StreamHandler(sys.stdout))
+    log.setLevel(logging.DEBUG)
     if current_app.config['ACCESS_TOKEN']:
         token = loads(current_app.config['ACCESS_TOKEN'])
     else:
@@ -82,7 +84,7 @@ def token_required(f):
     return decorator
 
 
-@routes_blueprint.route("/profile/", methods=["GET"])
+@routes_blueprint.route("/profile", methods=["GET"])
 @token_required
 def profile():
     """Fetching a protected resource using an OAuth 2 token.
@@ -92,7 +94,7 @@ def profile():
     return jsonify(instagram.get(current_app.config['USER_URL']).json())
 
 
-@routes_blueprint.route('/submit/', methods=['POST'])
+@routes_blueprint.route('/submit', methods=['POST'])
 @token_required
 def submit():
     current_app.logger.debug("Submit image processing")
