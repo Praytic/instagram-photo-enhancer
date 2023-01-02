@@ -47,7 +47,6 @@ def callback():
     in the redirect URL. We will use that to obtain an access token.
     """
     current_app.logger.debug("Callback func. Request params: %s", request.args)
-    current_app.logger.debug("Callback func. Request body: %s", request.json)
     instagram = OAuth2Session(
         current_app.config['CLIENT_ID'], state=session['oauth_state'])
     log = logging.getLogger('requests_oauthlib')
