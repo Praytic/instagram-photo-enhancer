@@ -14,16 +14,6 @@ class SubmitResponse(object):
      def __init__(self, **kwargs):
          self.renderingInProgress = True
 
-load_dotenv()
-client_id = os.getenv("CLIENT_ID")
-client_secret = os.getenv("CLIENT_SECRET")
-authorization_base_url = 'https://api.instagram.com/oauth/authorize'
-token_url = 'https://api.instagram.com/login/oauth/access_token'
-user_url = 'https://graph.instagram.com/me?fields=id,username'
-redirect_uri = os.getenv("REDIRECT_URI", 'http://localhost:5000/callback')
-access_token = os.getenv("ACCESS_TOKEN")
-port = int(os.environ.get("PORT", 5000))
-
 @app.route("/")
 def login():
     """Step 1: User Authorization.
@@ -31,7 +21,7 @@ def login():
     Redirect the user/resource owner to the OAuth provider 
     using an URL with a few key OAuth parameters.
     """
-    instagram = OAuth2Session(client_id, scope='user_profile', redirect_uri=redirect_uri)
+    instagram = OAuth2Session(client_id, client_secret, scope='user_profile', redirect_uri=redirect_uri)
     authorization_url, state = instagram.authorization_url(authorization_base_url)
 
     # State is used to prevent CSRF, keep this for later.
@@ -98,6 +88,15 @@ def submit():
 
 if __name__ == "__main__":
     # This allows us to use a plain HTTP callback
+    load_dotenv()
+    client_id = os.getenv("CLIENT_ID")
+    client_secret = os.getenv("CLIENT_SECRET")
+    authorization_base_url = 'https://api.instagram.com/oauth/authorize'
+    token_url = 'https://api.instagram.com/login/oauth/access_token'
+    user_url = 'https://graph.instagram.com/me?fields=id,username'
+    redirect_uri = os.getenv("REDIRECT_URI", 'http://localhost:5000/callback')
+    access_token = os.getenv("ACCESS_TOKEN")
+    port = int(os.environ.get("PORT", 5000))
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = "1"
 
     app.secret_key = os.urandom(24)
