@@ -54,7 +54,8 @@ def callback():
         token = loads(current_app.config['ACCESS_TOKEN'])
     else:
         token = instagram.fetch_token(
-            current_app.config['TOKEN_URL'], client_secret=current_app.config['CLIENT_SECRET'], authorization_response=request.url)
+            current_app.config['TOKEN_URL'], client_secret=current_app.config['CLIENT_SECRET'], 
+            authorization_response=request.url, include_client_id=True)
 
     # At this point we can fetch protected resources but lets save
     # the token and show how this is done from a persisted token
