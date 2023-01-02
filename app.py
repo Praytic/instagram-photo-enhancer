@@ -21,8 +21,8 @@ def login():
     Redirect the user/resource owner to the OAuth provider 
     using an URL with a few key OAuth parameters.
     """
-    instagram = OAuth2Session(client_id, client_secret, scope='user_profile', redirect_uri=redirect_uri)
-    authorization_url, state = instagram.authorization_url(authorization_base_url)
+    instagram = OAuth2Session(app.config['client_id'], scope='user_profile', redirect_uri=app.config['REDIRECT_URI'])
+    authorization_url, state = instagram.authorization_url(app.config['authorization_base_url'])
 
     # State is used to prevent CSRF, keep this for later.
     session['oauth_state'] = state
@@ -40,11 +40,11 @@ def callback():
     in the redirect URL. We will use that to obtain an access token.
     """
 
-    instagram = OAuth2Session(client_id, state=session['oauth_state'])
-    if access_token:
-        token = access_token
+    instagram = OAuth2Session(app.config['client_id'], state=session['oauth_state'])
+    if app.config['access_token']:
+        token = app.config['access_token']
     else:
-        token = instagram.fetch_token(token_url, client_secret=client_secret, authorization_response=request.url)
+        token = instagram.fetch_token(app.config['token_url'], client_secret=app.config['client_secret'], authorization_response=request.url)
 
     # At this point we can fetch protected resources but lets save
     # the token and show how this is done from a persisted token
@@ -73,8 +73,8 @@ def token_required(f):
 def profile(token):
     """Fetching a protected resource using an OAuth 2 token.
     """
-    instagram = OAuth2Session(client_id, token=token)
-    return jsonify(instagram.get(user_url).json())
+    instagram = OAuth2Session(app.config['client_id'], token=token)
+    return jsonify(instagram.get(app.config['user_url']).json())
 
 
 @app.route('/submit', methods=['POST'])
@@ -89,13 +89,15 @@ def submit():
 if __name__ == "__main__":
     # This allows us to use a plain HTTP callback
     load_dotenv()
-    client_id = os.getenv("CLIENT_ID")
-    client_secret = os.getenv("CLIENT_SECRET")
-    authorization_base_url = 'https://api.instagram.com/oauth/authorize'
-    token_url = 'https://api.instagram.com/login/oauth/access_token'
-    user_url = 'https://graph.instagram.com/me?fields=id,username'
-    redirect_uri = os.getenv("REDIRECT_URI", 'http://localhost:5000/callback')
-    access_token = os.getenv("ACCESS_TOKEN")
+    app.config.update(
+        client_id=os.getenv("client_id"),
+        client_secret=os.getenv("client_secret"),
+        authorization_base_url='https://api.instagram.com/oauth/authorize',
+        token_url='https://api.instagram.com/login/oauth/access_token',
+        USER_URL='https://graph.instagram.com/me?fields=id,username',
+        REDIRECT_URI=os.getenv("REDIRECT_URI", 'http://localhost:5000/callback'),
+        access_token = os.getenv("access_token")
+    )
     port = int(os.environ.get("PORT", 5000))
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = "1"
 
