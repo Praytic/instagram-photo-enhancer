@@ -1,4 +1,5 @@
 import os
+import sys
 
 import logging
 from logging.config import dictConfig
@@ -21,13 +22,10 @@ dictConfig({
         'handlers': ['wsgi']
     }
 })
-root = logging.getLogger()
-root.setLevel(os.environ.get("LOGLEVEL", "DEBUG"))
 
 app = Flask(__name__)
 app.logger.info("Starting the app...")
 app.register_blueprint(routes_blueprint)
-app.logger.setLevel(logging.DEBUG)
 
 app.config.update(CLIENT_ID=os.getenv("CLIENT_ID"),
                   CLIENT_SECRET=os.getenv("CLIENT_SECRET"),

@@ -5,9 +5,13 @@ from flask.json import jsonify, loads
 from requests_oauthlib import OAuth2Session
 
 import logging
+import sys
 import core
 
 routes_blueprint = Blueprint('routes_blueprint', __name__)
+log = logging.getLogger('requests_oauthlib')
+log.addHandler(logging.StreamHandler(sys.stdout))
+log.setLevel(logging.DEBUG)
 
 class SubmitResponse(object):
     def __init__(self, **kwargs):
