@@ -22,7 +22,7 @@ token_url = 'https://api.instagram.com/login/oauth/access_token'
 user_url = 'https://graph.instagram.com/me?fields=id,username'
 redirect_uri = os.getenv("REDIRECT_URI", 'http://localhost:5000/callback')
 access_token = os.getenv("ACCESS_TOKEN")
-
+port = int(os.environ.get("PORT", 5000))
 
 @app.route("/")
 def login():
@@ -101,4 +101,4 @@ if __name__ == "__main__":
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = "1"
 
     app.secret_key = os.urandom(24)
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=port, debug=True)
