@@ -77,7 +77,7 @@ def token_required(f):
 
 @routes_blueprint.route("/profile", methods=["GET"])
 @token_required
-def profile(token):
+def profile():
     """Fetching a protected resource using an OAuth 2 token.
     """
     current_app.logger.debug("Returning user profile")
