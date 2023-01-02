@@ -3,13 +3,14 @@ from functools import wraps
 from flask import redirect, request, session, url_for, Blueprint, current_app
 from flask.json import jsonify, loads
 from requests_oauthlib import OAuth2Session
+from requests_oauthlib import oauth2_session
 
 import logging
 import core
 
 routes_blueprint = Blueprint('routes_blueprint', __name__)
-logging.getLogger('OAuth2Session').setLevel(logging.DEBUG)
 
+oauth2_session.log.setLevel(logging.DEBUG)
 
 class SubmitResponse(object):
     def __init__(self, **kwargs):
