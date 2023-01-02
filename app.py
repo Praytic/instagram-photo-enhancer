@@ -7,6 +7,7 @@ from flask import Flask, request, redirect, session, url_for
 from flask.json import jsonify
 from logging.config import dictConfig
 
+
 dictConfig({
     'version': 1,
     'formatters': {'default': {
@@ -23,7 +24,33 @@ dictConfig({
     }
 })
 
-app = Flask(__name__)
+
+def create_app() -> Flask:
+    app = Flask(__name__)
+    app.logger.debug("Starting the app")
+    app.config.update(CLIENT_ID=os.getenv("CLIENT_ID"),
+                      CLIENT_SECRET=os.getenv("CLIENT_SECRET"),
+                      REDIRECT_URI=os.getenv("REDIRECT_URI"),
+                      AUTHORIZATION_BASE_URL='https://api.instagram.com/oauth/authorize',
+                      USER_URL='https://graph.instagram.com/me?fields=id,username',
+                      TOKEN_URL='https://api.instagram.com/login/oauth/access_token',
+                      ACCESS_TOKEN=os.getenv("ACCESS_TOKEN"),
+                      PORT = int(os.getenv("PORT", 5000)))
+    app.secret_key = os.urandom(24)
+    return app
+
+def create_gunicorn_app() -> Flask:
+    app = create_app()
+    app.run(host='0.0.0.0', port=port)
+
+def create_local_app() -> Flask:
+    app = create_app()
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = "1"
+    app.config.from_envvar(".env", True)
+    app.run(host='0.0.0.0', port=port, debug=True)
+
+
+app = create_local_app() if __name__ == "__main__" else create_gunicorn_app()
 
 
 class SubmitResponse(object):
@@ -111,23 +138,3 @@ def submit():
     selectionRect = request.files.get('selectionRect', '')
     core.VideoProcessor(img)
     return SubmitResponse()
-
-app.logger.debug("NAME: %s", __name__)
-if __name__ == "__main__":
-    app.logger.debug("Starting the app")
-
-    is_heroku = "DYNO" in os.environ
-    app.config.update(CLIENT_ID=os.getenv("CLIENT_ID"),
-                      CLIENT_SECRET=os.getenv("CLIENT_SECRET"),
-                      REDIRECT_URI=os.getenv("REDIRECT_URI"),
-                      AUTHORIZATION_BASE_URL='https://api.instagram.com/oauth/authorize',
-                      USER_URL='https://graph.instagram.com/me?fields=id,username',
-                      TOKEN_URL='https://api.instagram.com/login/oauth/access_token',
-                      ACCESS_TOKEN=os.getenv("ACCESS_TOKEN"))
-    # app.config.from_envvar(".env", True)
-
-    port = int(os.environ.get("PORT", 5000))
-    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = "1"
-
-    app.secret_key = os.urandom(24)
-    app.run(host='0.0.0.0', port=port, debug=not is_heroku)
