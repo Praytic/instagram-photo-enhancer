@@ -38,7 +38,7 @@ def login():
     Redirect the user/resource owner to the OAuth provider 
     using an URL with a few key OAuth parameters.
     """
-    app.logger.debug("Login the client.")
+    app.logger.debug("Login the client. %s %s", app.config['CLIENT_ID'], app.config['REDIRECT_URI'])
     instagram = OAuth2Session(
         app.config['CLIENT_ID'], scope='user_profile', redirect_uri=app.config['REDIRECT_URI'])
     authorization_url, state = instagram.authorization_url(
