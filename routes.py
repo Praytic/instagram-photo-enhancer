@@ -67,12 +67,11 @@ def token_required(f):
         # ensure the jwt-token is passed with the headers
         if session['oauth_token']:
             current_app.logger.debug("oauth_token: %s", session['oauth_token'])
-            token = session['oauth_token']
-        if not token:  # throw error if no token provided
+        else:  # throw error if no token provided
             current_app.logger.debug("oauth_token doesn't exist, redirecting to /")
             return redirect(url_for('.'))
         # Return the user information attached to the token
-        return f(token, *args, **kwargs)
+        return f(*args, **kwargs)
     return decorator
 
 
