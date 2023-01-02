@@ -1,7 +1,7 @@
 from functools import wraps
 
 from flask import redirect, request, session, url_for, Blueprint, current_app
-from flask.json import jsonify
+from flask.json import jsonify, loads
 from requests_oauthlib import OAuth2Session
 
 import core
@@ -46,7 +46,7 @@ def callback():
     instagram = OAuth2Session(
         current_app.config['CLIENT_ID'], state=session['oauth_state'])
     if current_app.config['ACCESS_TOKEN']:
-        token = current_app.config['ACCESS_TOKEN']
+        token = loads(current_app.config['ACCESS_TOKEN'])
     else:
         token = instagram.fetch_token(
             current_app.config['TOKEN_URL'], client_secret=current_app.config['CLIENT_SECRET'], authorization_response=request.url)
