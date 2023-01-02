@@ -4,9 +4,11 @@ from flask import redirect, request, session, url_for, Blueprint, current_app
 from flask.json import jsonify, loads
 from requests_oauthlib import OAuth2Session
 
+import logging
 import core
 
 routes_blueprint = Blueprint('routes_blueprint', __name__)
+logging.getLogger('OAuth2Session').setLevel(logging.DEBUG)
 
 
 class SubmitResponse(object):
@@ -45,6 +47,7 @@ def callback():
     current_app.logger.debug("Callback func. Request params: %s", request.args)
     instagram = OAuth2Session(
         current_app.config['CLIENT_ID'], state=session['oauth_state'])
+    
     if current_app.config['ACCESS_TOKEN']:
         token = loads(current_app.config['ACCESS_TOKEN'])
     else:
