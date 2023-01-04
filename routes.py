@@ -48,17 +48,17 @@ def callback():
     """
     current_app.logger.debug("Callback func. Request params: %s", request.args)
     instagram = OAuth2Session(
-        current_app.config['CLIENT_ID'], state=session['oauth_state'])
+        current_app.config['CLIENT_ID'], state=session['oauth_state'], 
+        redirect_uri=current_app.config['REDIRECT_URI'])
     log = logging.getLogger('requests_oauthlib')
     log.addHandler(logging.StreamHandler(sys.stdout))
     log.setLevel(logging.DEBUG)
     if current_app.config['ACCESS_TOKEN']:
         token = loads(current_app.config['ACCESS_TOKEN'])
     else:
-        # token = instagram.fetch_token(
-        #     current_app.config['TOKEN_URL'], client_secret=current_app.config['CLIENT_SECRET'], 
-        #     authorization_response=request.url, include_client_id=True)
-        token = request.args
+        token = instagram.fetch_token(
+            current_app.config['TOKEN_URL'], client_secret=current_app.config['CLIENT_SECRET'], 
+            authorization_response=request.url, include_client_id=True)
 
     # At this point we can fetch protected resources but lets save
     # the token and show how this is done from a persisted token
