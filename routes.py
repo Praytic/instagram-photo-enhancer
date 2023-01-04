@@ -9,9 +9,7 @@ import sys
 import core
 
 routes_blueprint = Blueprint('routes_blueprint', __name__)
-log = logging.getLogger('requests_oauthlib')
-log.addHandler(logging.StreamHandler(sys.stdout))
-log.setLevel(logging.DEBUG)
+
 
 class SubmitResponse(object):
     def __init__(self, **kwargs):
@@ -72,32 +70,29 @@ def token_required(f):
     @wraps(f)
     def decorator(*args, **kwargs):
         token = None
-        current_app.logger.debug("Checking oauth_token...")
         # ensure the jwt-token is passed with the headers
         if session['oauth_token']:
-            current_app.logger.debug("oauth_token: %s", session['oauth_token'])
-        else:  # throw error if no token provided
-            current_app.logger.debug("oauth_token doesn't exist, redirecting to /")
+            instagram = OAuth2Session(current_app.config['CLIENT_ID'], token=session['oauth_token'])
+            user = instagram.get(current_app.config['USER_URL'])
+        else:
             return redirect(url_for('.'))
         # Return the user information attached to the token
-        return f(*args, **kwargs)
+        return f(user, *args, **kwargs)
     return decorator
 
 
 @routes_blueprint.route("/profile", methods=["GET"])
 @token_required
-def profile():
+def profile(user):
     """Fetching a protected resource using an OAuth 2 token.
     """
-    current_app.logger.debug("Returning user profile")
-    instagram = OAuth2Session(current_app.config['CLIENT_ID'], token=session['oauth_token'])
-    return jsonify(instagram.get(current_app.config['USER_URL']).json())
+    return jsonify(user.json())
 
 
 @routes_blueprint.route('/submit', methods=['POST'])
 @token_required
-def submit():
-    current_app.logger.debug("Submit image processing")
+def submit(user):
+    current_app.logger.info("Submit image processing for user ")
     img = request.files.get('img', '')
     selectionRect = request.files.get('selectionRect', '')
     core.VideoProcessor(img)
