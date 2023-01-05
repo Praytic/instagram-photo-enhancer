@@ -104,7 +104,7 @@ def protected(res, file):
 @token_required
 def submit():
     current_app.logger.info("Submit image processing for user ")
-    img = request.files.get('img', '')
-    selectionRect = request.files.get('selectionRect', '')
+    img = request.form['img']
+    selectionRect = request.form['selectionRect']
     core.VideoProcessor(img)
     return SubmitResponse()
