@@ -1,6 +1,6 @@
 from functools import wraps
 
-from flask import redirect, request, session, url_for, Blueprint, current_app
+from flask import redirect, request, session, url_for, Blueprint, current_app, send_from_directory
 from flask.json import jsonify, loads
 from requests_oauthlib import OAuth2Session
 
@@ -16,7 +16,7 @@ class SubmitResponse(object):
         self.renderingInProgress = True
 
 
-@routes_blueprint.route("/",  methods=["GET"])
+@routes_blueprint.route("/login",  methods=["GET"])
 def login():
     """Step 1: User Authorization.
 
@@ -63,35 +63,46 @@ def callback():
     # in /profile.
     session['oauth_token'] = token
 
-    return redirect(url_for('.profile'))
+    return redirect(url_for('.index'))
 
 
 def token_required(f):
     @wraps(f)
     def decorator(*args, **kwargs):
-        token = None
+        user = None
         # ensure the jwt-token is passed with the headers
-        if session['oauth_token']:
-            instagram = OAuth2Session(current_app.config['CLIENT_ID'], token=session['oauth_token'])
-            user = instagram.get(current_app.config['USER_URL'])
-        else:
-            return redirect(url_for('.'))
+        try:
+            session['oauth_token']
+        except KeyError:
+            return redirect(url_for('.login'))
         # Return the user information attached to the token
-        return f(user, *args, **kwargs)
+        return f(*args, **kwargs)
     return decorator
 
 
 @routes_blueprint.route("/profile", methods=["GET"])
 @token_required
 def profile(user):
-    """Fetching a protected resource using an OAuth 2 token.
-    """
+    instagram = OAuth2Session(current_app.config['CLIENT_ID'], token=session['oauth_token'])
+    user = instagram.get(current_app.config['USER_URL'])
     return jsonify(user.json())
+
+
+@routes_blueprint.route('/', methods=['GET'])
+@token_required
+def index():
+    return send_from_directory('static', 'index.html')
+
+
+@routes_blueprint.route('/<any(js, css):res>/<file>')
+@token_required
+def protected(res, file):
+    return send_from_directory(f'static/{res}', file)
 
 
 @routes_blueprint.route('/submit', methods=['POST'])
 @token_required
-def submit(user):
+def submit():
     current_app.logger.info("Submit image processing for user ")
     img = request.files.get('img', '')
     selectionRect = request.files.get('selectionRect', '')
