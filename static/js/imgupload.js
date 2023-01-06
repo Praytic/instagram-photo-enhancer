@@ -4,18 +4,26 @@ $('#imgInp').on('keyup keypress', function (e) {
     var keyCode = e.keyCode || e.which;
     if (keyCode === 13) {
         e.preventDefault();
+        if ($.session.get("response")) {
+            var formData = $.session.get("response");
+            formData.append('rect_end', JSON.stringify(selectionRect)) 
+            submitRequest(formData)
+        } else {
+            var formData = new FormData();
+            formData.append('rect_start', JSON.stringify(selectionRect));
+            formData.append('img', img);
+        }
+
         $.ajax({
             url: '/submit',
             type: 'POST',
             processData: false,
             contentType: false,
-            data: formData,
+            data: $.session.get("response"),
             complete: function (data, status, xhr) {
             },
             success: function(data, status, xhr) {
-                if (!data.renderingInProgress) {
-                    alert('Now select the final frame.');
-                } else {
+                if (data.renderingInProgress) {
                     alert('Your video is queued for rendering. Please wait...')
                 }
             },
@@ -27,7 +35,25 @@ $('#imgInp').on('keyup keypress', function (e) {
     }
 });
 
-var formData = new FormData();
+function submitRequest(formData) {
+    $.ajax({
+        url: '/submit',
+        type: 'POST',
+        processData: false,
+        contentType: false,
+        data: formData,
+        complete: function (data, status, xhr) {
+        },
+        success: function(data, status, xhr) {
+            if (data.renderingInProgress) {
+                alert('Your video is queued for rendering. Please wait...')
+            }
+        },
+        error: function(xhr, status) {
+            alert('Something went wrong. ' + xhr.status);
+        }
+    });
+}
 
 function readURL(input) {
     if (input.files && input.files[0]) {
@@ -40,11 +66,10 @@ function readURL(input) {
                 handles: true,
                 aspectRatio: '9:16',
                 onSelectEnd: function (img, area) {
-                    formData = new FormData();
-                    formData.append('img', img);
                     var selectionRect = [];
                     selectionRect.push((({ x1, x2, y1, y2 }) => ({ x1, x2, y1, y2 }))(area));
-                    formData.append('selectionRect', JSON.stringify(selectionRect))
+                    $.session.set("selectionRect", selectionRect);
+                    $.session.set("img", img);
                 }
             });
         }
