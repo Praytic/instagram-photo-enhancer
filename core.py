@@ -58,7 +58,8 @@ class Rect2:
 class VideoProcessor:
 
     story_resolution = Vec2(1080, 1920)
-    video_name = 'output_video_dir/video-%s.mp4'
+    video_dir = '/tmp'
+    video_name = f'{video_dir}/video-%s.mp4'
 
     def __init__(self, img, rect_start, rect_end, fps=30, video_length=10):
         self.img = img

@@ -117,5 +117,4 @@ def submit():
     video_path = video_processor.produce_video()
     current_app.logger.info(f"Created video {video_path}")
     
-    abs_video_path = os.path.join(current_app.root_path, video_path)
-    return send_file(path_or_file=abs_video_path, mimetype="video/mp4", download_name="video.mp4", as_attachment=True)
+    return send_file(path_or_file=video_path, mimetype="video/mp4", download_name="video.mp4", as_attachment=True)
