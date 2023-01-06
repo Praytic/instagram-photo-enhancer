@@ -40,4 +40,4 @@ app.config.update(CLIENT_ID=os.getenv("CLIENT_ID"),
 app.secret_key = os.urandom(24)
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=app.config['PORT'], debug=True, ssl_context='adhoc')
+    app.run(host='0.0.0.0', port=app.config['PORT'], debug=True, ssl_context='adhoc', threaded=True)

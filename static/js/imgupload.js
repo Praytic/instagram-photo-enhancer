@@ -1,58 +1,52 @@
 $('#blah').hide();
 $('#remove').hide();
-$('#imgInp').on('keyup keypress', function (e) {
+$('#imgInp').on('keypress', function (e) {
     var keyCode = e.keyCode || e.which;
     if (keyCode === 13) {
         e.preventDefault();
-        if ($.session.get("response")) {
-            var formData = $.session.get("response");
-            formData.append('rect_end', JSON.stringify(selectionRect)) 
-            submitRequest(formData)
-        } else {
-            var formData = new FormData();
-            formData.append('rect_start', JSON.stringify(selectionRect));
-            formData.append('img', img);
-        }
+        if (selectionRect) {
+            if (formData.has('rect_start')) {
+                formData.append('rect_end', JSON.stringify(selectionRect));
+                submitRequest(formData);
 
-        $.ajax({
-            url: '/submit',
-            type: 'POST',
-            processData: false,
-            contentType: false,
-            data: $.session.get("response"),
-            complete: function (data, status, xhr) {
-            },
-            success: function(data, status, xhr) {
-                if (data.renderingInProgress) {
-                    alert('Your video is queued for rendering. Please wait...')
-                }
-            },
-            error: function(xhr, status) {
-                alert('Something went wrong. ' + xhr.status);
+                formData.delete('img')
+                formData.delete('rect_start')
+                formData.delete('rect_end')
+                selectionRect = {}
+            } else {
+                formData.append('rect_start', JSON.stringify(selectionRect));
+                formData.append('img', curImg);
             }
-        });
+        }
         return false;
     }
 });
 
-function submitRequest(formData) {
-    $.ajax({
-        url: '/submit',
-        type: 'POST',
-        processData: false,
-        contentType: false,
-        data: formData,
-        complete: function (data, status, xhr) {
-        },
-        success: function(data, status, xhr) {
-            if (data.renderingInProgress) {
-                alert('Your video is queued for rendering. Please wait...')
-            }
-        },
-        error: function(xhr, status) {
-            alert('Something went wrong. ' + xhr.status);
-        }
-    });
+var formData = new FormData();
+var selectionRect = {};
+var curImg;
+
+function submitRequest() {
+    (async () => {
+        const rawResponse = await fetch(new URL('/submit', location), {
+          method: 'POST',
+          body: formData
+        })
+        .then(resp => resp.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            // the filename you want
+            a.download = 'video.mp4';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            alert('your file has downloaded!'); // or you know, something with better UX...
+        })
+        .catch(() => alert('oh no!'));
+      })();
 }
 
 function readURL(input) {
@@ -66,10 +60,8 @@ function readURL(input) {
                 handles: true,
                 aspectRatio: '9:16',
                 onSelectEnd: function (img, area) {
-                    var selectionRect = [];
-                    selectionRect.push((({ x1, x2, y1, y2 }) => ({ x1, x2, y1, y2 }))(area));
-                    $.session.set("selectionRect", selectionRect);
-                    $.session.set("img", img);
+                    selectionRect = (({ x1, x2, y1, y2 }) => ({ x1, x2, y1, y2 }))(area);
+                    curImg = img.src;
                 }
             });
         }

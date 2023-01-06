@@ -31,6 +31,30 @@ class Vec2:
         self.y = int(self.y)
 
 
+@dataclass
+class Rect2:
+    x1: int
+    y1: int
+    x2: int
+    y2: int
+
+    @staticmethod
+    def zero(self):
+        return Rect2(0, 0, 0, 0)
+
+    def __init__(self, *args, **kwargs):
+        self.x1 = int(kwargs.get('x1'))
+        self.x2 = int(kwargs.get('x2'))
+        self.y1 = int(kwargs.get('y1'))
+        self.y2 = int(kwargs.get('y2'))
+
+    def get_size(self) -> Vec2:
+        return Vec2(self.x2 - self.x1, self.y2 - self.y1)
+
+    def get_pos(self) -> Vec2:
+        return Vec2(self.x1, self.y1)
+
+
 class VideoProcessor:
 
     story_resolution = Vec2(1080, 1920)
@@ -38,8 +62,8 @@ class VideoProcessor:
 
     def __init__(self, img, rect_start, rect_end, fps=30, video_length=10):
         self.img = img
-        self.rect_start = rect_start
-        self.rect_end = rect_end
+        self.rect_start = Rect2(**rect_start)
+        self.rect_end = Rect2(**rect_end)
         self.fps = fps
         self.video_length = video_length
         self.transition_speed = video_length * fps

@@ -1,6 +1,6 @@
 from functools import wraps
 
-from flask import redirect, request, session, url_for, Blueprint, current_app, send_from_directory
+from flask import redirect, request, session, url_for, Blueprint, current_app, send_from_directory, send_file
 from flask.json import jsonify, loads
 from requests_oauthlib import OAuth2Session
 
@@ -47,7 +47,7 @@ def callback():
     """
     current_app.logger.debug("Callback func. Request params: %s", request.args)
     instagram = OAuth2Session(
-        current_app.config['CLIENT_ID'], state=session.get('oauth_state', request.args['state']), 
+        current_app.config['CLIENT_ID'], state=session['oauth_state'], 
         redirect_uri=current_app.config['REDIRECT_URI'])
     log = logging.getLogger('requests_oauthlib')
     log.addHandler(logging.StreamHandler(sys.stdout))
@@ -108,14 +108,14 @@ def protected(res, file):
 @routes_blueprint.route('/submit', methods=['POST'])
 @token_required
 def submit():
-    current_app.logger.info(f"Submit image processing for user {profile()}")
+    current_app.logger.info(f"Submit image processing for user")
     img = request.form['img']
-    rect_start = request.form['rect_start']
-    rect_end = request.form['rect_end']
-    fps = request.form['fps']
-    video_length = request.form['video_length']
+    rect_start = loads(request.form['rect_start'])
+    rect_end = loads(request.form['rect_end'])
 
-    video_processor = core.VideoProcessor(img, rect_start, rect_end, fps, video_length)
+    video_processor = core.VideoProcessor(img, rect_start, rect_end)
     video_path = video_processor.produce_video()
-    uploads = os.path.join(current_app.root_path, video_path)
-    return send_from_directory(directory=uploads, filename='video.mp4')
+    current_app.logger.info(f"Created video {video_path}")
+    
+    abs_video_path = os.path.join(current_app.root_path, video_path)
+    return send_file(path_or_file=abs_video_path, mimetype="video/mp4", download_name="video.mp4", as_attachment=True)
