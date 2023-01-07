@@ -49,6 +49,16 @@ To setup this project on your local environment follow these steps:
     pip install -r requirements.txt
     ```
 
+1. Create `.env` file with the following variables:
+
+    ```bash
+    CLIENT_SECRET=
+    CLIENT_ID=
+    REDIRECT_URI=https://localhost:5000/callback
+    ```
+
+    Provide your own secrets from the developer console following this [guide](https://developers.facebook.com/docs/instagram-basic-display-api/) or request production secrets from the repo owners.
+
 ## Run
 
 To run the project locally you need to execute the following command in the terminal. **Make sure you do it in the project root dir.**
